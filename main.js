@@ -3,7 +3,7 @@ import { renderApp } from './ui.js';
 import * as UI from './ui.js';
 import { state } from './state.js';
 import { CONFIG } from './config.js';
-import { route, navigate } from './router.js';
+import { route, navigate, path } from './router.js';
 
 // Wake Render's free instance while the user reads the landing page
 // so the first login/data fetch doesn't hit a cold start.
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // For now, let's assume if we got a user, we proceed
     const user = JSON.parse(localStorage.getItem('user')); // User info is ok in localStorage, not token
     
-    if (user && location.pathname === '/app') {
+    if (user && path() === '/app') {
         await Promise.all([fetchBoards(), fetchLists()]);
         
         if (state.boards.length > 0) {

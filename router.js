@@ -10,6 +10,15 @@ function loggedIn() {
     return !!localStorage.getItem('user');
 }
 
+const BASE = (() => {
+    const m = location.pathname.match(/^\/([^/]+)/);
+    return m && !['login', 'app'].includes(m[1]) ? '/' + m[1] : '';
+})();
+
+export function path() {
+    return location.pathname.replace(BASE, '') || '/';
+}
+
 function resolve(path) {
     if (path === '/login') return loggedIn() ? '/app' : '/login';
     if (path === '/app') return loggedIn() ? '/app' : '/login';
@@ -18,14 +27,15 @@ function resolve(path) {
 
 export function navigate(path) {
     const target = resolve(path);
-    history.pushState({}, '', target);
+    history.pushState({}, '', BASE + target);
     render(target);
 }
 
 export function route() {
-    const target = resolve(location.pathname);
-    if (target !== location.pathname) {
-        history.replaceState({}, '', target);
+    const p = location.pathname.replace(BASE, '') || '/';
+    const target = resolve(p);
+    if (p !== target) {
+        history.replaceState({}, '', BASE + target);
     }
     render(target);
 }
