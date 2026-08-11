@@ -96,6 +96,10 @@ mongoose.connect(env.MONGODB_URI, {
 
 // --- Middleware ---
 // --- Middleware & Safety ---
+// Render sits behind a proxy; without this, Express sees ::1 for every client
+// and all users share a single rate-limit bucket.
+app.set('trust proxy', 1);
+
 app.use(helmet({ 
     contentSecurityPolicy: { 
         directives: { 
@@ -151,7 +155,7 @@ const globalLimiter = rateLimit({
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 20, // Limit each IP to 20 auth requests per window
+    max: 50, // Limit each IP to 50 auth requests per window
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: 'Too many login/register attempts. Please try again after 15 minutes.' },
