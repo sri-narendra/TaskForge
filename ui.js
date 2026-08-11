@@ -1687,6 +1687,7 @@ export async function handleAuthSubmit() {
                 await fetchTasks(state.currentBoardId);
             }
             renderApp();
+            hideAuthLoading();
         }
     } finally {
         submitBtn.classList.remove('loading');
@@ -1699,6 +1700,11 @@ function showAuthLoading(text) {
     const label = document.getElementById('authLoadingText');
     if (label) label.textContent = text;
     if (overlay) overlay.classList.remove('hidden');
+}
+
+function hideAuthLoading() {
+    const overlay = document.getElementById('authLoadingOverlay');
+    if (overlay) overlay.classList.add('hidden');
 }
 
 export async function logout() {
