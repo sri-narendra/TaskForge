@@ -25,7 +25,9 @@ const validateSchema = (schema) => (req, res, next) => {
         next();
     } catch (err) {
         if (err.constructor.name === 'ZodError') {
-            return res.status(400).json({ error: 'Validation Error', details: err.errors });
+            // Zod v4 exposes issues (v3 used errors)
+            const details = err.issues || err.errors || [];
+            return res.status(400).json({ error: 'Validation Error', details });
         }
         next(err);
     }
