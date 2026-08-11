@@ -166,15 +166,15 @@ const authLimiter = rateLimit({
 
 // Apply global limit
 app.use('/api/', globalLimiter);
-// Apply strict auth limits
+// Apply strict auth limits (single mount point so each request counts once)
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
 // --- ROUTES ---
 
 // Auth
-app.post('/api/auth/register', authLimiter, validateSchema(Schemas.RegisterSchema), authController.register);
-app.post('/api/auth/login', authLimiter, validateSchema(Schemas.LoginSchema), authController.login);
+app.post('/api/auth/register', validateSchema(Schemas.RegisterSchema), authController.register);
+app.post('/api/auth/login', validateSchema(Schemas.LoginSchema), authController.login);
 app.post('/api/auth/refresh', authController.refreshToken);
 app.post('/api/auth/logout', authController.logout);
 app.get('/api/auth/me', auth, (req, res) => res.json({ user: req.user })); // Keep for frontend check
@@ -488,10 +488,10 @@ app.use((err, req, res, next) => {
         res.status(err.status || 500).json({ 
             error: err.message || 'Internal Server Error',
             // Return Zod details even in prod so user knows why it failed
-            details: err.constructor.name === 'ZodError' ? err.errors : undefined 
+            details: err.constructor.name === 'ZodError' ? (err.issues || err.errors) : undefined 
         });
     } else {
-        res.status(err.status || 500).json({ error: err.message, stack: err.stack, details: err.errors });
+        res.status(err.status || 500).json({ error: err.message, stack: err.stack, details: err.issues || err.errors });
     }
 });
 

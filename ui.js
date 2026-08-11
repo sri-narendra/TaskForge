@@ -1598,6 +1598,13 @@ let isRegisterMode = false;
 import { navigate } from './router.js';
 
 export function showAuth() {
+    // Already logged in? Router would map /login -> /app but without bootstrapping data.
+    // Bootstrap in place so the dashboard is fully rendered.
+    if (localStorage.getItem('user')) {
+        navigate('/app');
+        bootstrapApp();
+        return;
+    }
     navigate('/login');
 }
 
@@ -1680,13 +1687,7 @@ export async function handleAuthSubmit() {
             // No reload: on GitHub Pages the /app path has no real file, so a reload
             // would 404 back to the landing page. The in-memory access token from
             // register/login is still valid, so bootstrap the app data in place.
-            const user = JSON.parse(localStorage.getItem('user'));
-            await Promise.all([fetchBoards(), fetchLists()]);
-            if (user && state.boards.length > 0) {
-                state.currentBoardId = state.boards[0].id;
-                await fetchTasks(state.currentBoardId);
-            }
-            renderApp();
+            await bootstrapApp();
             updateAuthUI();
             hideAuthLoading();
         }
@@ -1694,6 +1695,16 @@ export async function handleAuthSubmit() {
         submitBtn.classList.remove('loading');
         document.getElementById('authSpinner')?.classList.add('hidden');
     }
+}
+
+export async function bootstrapApp() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    await Promise.all([fetchBoards(), fetchLists()]);
+    if (user && state.boards.length > 0) {
+        state.currentBoardId = state.boards[0].id;
+        await fetchTasks(state.currentBoardId);
+    }
+    renderApp();
 }
 
 function showAuthLoading(text) {
