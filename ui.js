@@ -1687,6 +1687,7 @@ export async function handleAuthSubmit() {
                 await fetchTasks(state.currentBoardId);
             }
             renderApp();
+            updateAuthUI();
             hideAuthLoading();
         }
     } finally {
