@@ -1677,7 +1677,16 @@ export async function handleAuthSubmit() {
             // Success — fullscreen loading while the app loads
             showAuthLoading(isRegisterMode ? 'Creating your account...' : 'Signing you in...');
             navigate('/app');
-            window.location.reload();
+            // No reload: on GitHub Pages the /app path has no real file, so a reload
+            // would 404 back to the landing page. The in-memory access token from
+            // register/login is still valid, so bootstrap the app data in place.
+            const user = JSON.parse(localStorage.getItem('user'));
+            await Promise.all([fetchBoards(), fetchLists()]);
+            if (user && state.boards.length > 0) {
+                state.currentBoardId = state.boards[0].id;
+                await fetchTasks(state.currentBoardId);
+            }
+            renderApp();
         }
     } finally {
         submitBtn.classList.remove('loading');
@@ -1848,7 +1857,7 @@ export async function handleImport(event) {
                 showToast("Unrecognized Google Tasks JSON format.");
             }
             
-            setTimeout(() => window.location.reload(), 1000); 
+            setTimeout(() => { Promise.all([fetchBoards(), fetchLists()]).then(() => renderApp()); }, 1000); 
         } catch (err) {
             console.error("Import error:", err);
             showToast("Failed to parse JSON file.");
@@ -1898,7 +1907,7 @@ export function deleteListFromMenu() {
 // --- Event Listeners for API Resilience ---
 window.addEventListener('app:auth-expired', () => {
     showToast('Session expired. Please log in again.');
-    setTimeout(() => window.location.reload(), 1500);
+    setTimeout(() => { localStorage.removeItem('user'); navigate('/login'); }, 1500);
 });
 
 window.addEventListener('app:network-error', (e) => {
