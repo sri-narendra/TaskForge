@@ -77,7 +77,7 @@ exports.register = async (req, res, next) => {
         const jwtToken = jwt.sign(
             { userId: user.id, email: user.email, role: user.role },
             env.JWT_SECRET,
-            { expiresIn: '15m' }
+            { expiresIn: '8h' }
         );
 
         const { token: refreshToken } = await generateRefreshToken(user, req.ip);
@@ -108,7 +108,7 @@ exports.login = async (req, res, next) => {
         const jwtToken = jwt.sign(
             { userId: user.id, email: user.email, role: user.role },
             env.JWT_SECRET,
-            { expiresIn: '15m' }
+            { expiresIn: '8h' }
         );
 
         const { token: refreshToken } = await generateRefreshToken(user, req.ip);
@@ -169,7 +169,7 @@ exports.refreshToken = async (req, res, next) => {
         const jwtToken = jwt.sign(
             { userId: rToken.user.id, email: rToken.user.email, role: rToken.user.role },
             env.JWT_SECRET,
-            { expiresIn: '15m' }
+            { expiresIn: '8h' }
         );
 
         res.json({ token: jwtToken });

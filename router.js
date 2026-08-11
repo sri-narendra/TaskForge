@@ -1,4 +1,6 @@
-// Minimal History-API router: / = landing, /login = auth, /app = board
+// Hash router: / = landing, /login = auth, /app = board.
+// Using the URL hash (#/app) instead of pathnames so GitHub Pages always
+// serves index.html on refresh — the hash is never sent to the server.
 
 const getView = () => ({
     landing: document.getElementById('landingView'),
@@ -10,44 +12,41 @@ function loggedIn() {
     return !!localStorage.getItem('user');
 }
 
-const BASE = (() => {
-    const m = location.pathname.match(/^\/([^/]+)/);
-    return m && !['login', 'app'].includes(m[1]) ? '/' + m[1] : '';
-})();
-
+// '#/app' -> '/app', '#capabilities' (landing anchor) -> '/', '' -> '/'
 export function path() {
-    return location.pathname.replace(BASE, '') || '/';
+    const h = location.hash.replace(/^#/, '');
+    if (h === '' || !h.startsWith('/')) return '/';
+    return h;
 }
 
-function resolve(path) {
-    if (path === '/login') return loggedIn() ? '/app' : '/login';
-    if (path === '/app') return loggedIn() ? '/app' : '/login';
+function resolve(p) {
+    if (p === '/login') return loggedIn() ? '/app' : '/login';
+    if (p === '/app') return loggedIn() ? '/app' : '/login';
     return '/';
 }
 
-export function navigate(path) {
-    const target = resolve(path);
-    history.pushState({}, '', BASE + target);
-    render(target);
-}
-
-export function route() {
-    const p = location.pathname.replace(BASE, '') || '/';
-    const target = resolve(p);
-    if (p !== target) {
-        history.replaceState({}, '', BASE + target);
+export function navigate(targetPath) {
+    const target = resolve(targetPath);
+    // Landing lives at the bare URL (no hash); routes get '#/login' or '#/app'
+    const desired = target === '/' ? '' : '/' + target;
+    if (location.hash !== (desired ? '#' + desired : '')) {
+        location.hash = desired;
     }
     render(target);
 }
 
-function render(path) {
+export function route() {
+    render(resolve(path()));
+}
+
+function render(p) {
     const v = getView();
-    v.landing?.classList.toggle('hidden', path !== '/');
-    v.auth?.classList.toggle('hidden', path !== '/login');
-    v.app?.classList.toggle('hidden', path !== '/app');
-    document.body.classList.toggle('has-landing', path === '/');
-    document.title = path === '/app' ? 'TaskForge' : path === '/login' ? 'Sign In - TaskForge' : 'TaskForge';
-    if (path === '/') revealLanding();
+    v.landing?.classList.toggle('hidden', p !== '/');
+    v.auth?.classList.toggle('hidden', p !== '/login');
+    v.app?.classList.toggle('hidden', p !== '/app');
+    document.body.classList.toggle('has-landing', p === '/');
+    document.title = p === '/app' ? 'TaskForge' : p === '/login' ? 'Sign In - TaskForge' : 'TaskForge';
+    if (p === '/') revealLanding();
 }
 
 const revealObs = new IntersectionObserver(entries => {
@@ -72,5 +71,5 @@ function revealLanding() {
     });
 }
 
-window.addEventListener('popstate', route);
+window.addEventListener('hashchange', route);
 document.addEventListener('DOMContentLoaded', route);
